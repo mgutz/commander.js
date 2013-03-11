@@ -412,6 +412,13 @@ Command.prototype.executeSubCommand = function(argv, args, unknown) {
     bin = local;
     args = args.slice(1);
   } else if (extbang) {
+
+    // For the case where bin/SCRIPT requires another_dir/SCRIPT. `another_dir`
+    // should be root not `bin`.
+    if (this._extbangRoot) {
+      dir = this._extbangRoot;
+    }
+
     for (extname in extbang) {
       // strip extname
       var script = basename(argv[1], path.extname(argv[1])) + '-' + args[0] + extname;
@@ -420,13 +427,14 @@ Command.prototype.executeSubCommand = function(argv, args, unknown) {
       if (exists(local)) {
         // use the user-defined executable like `node`
         bin = extbang[extname];
-        // execute local script by prepending it as first argument
+        // make local script first argument for executable
         args = args.slice(1);
         args.unshift(local);
         break;
       }
     }
   }
+
 
   // run it
   var proc = spawn(bin, args, { stdio: 'inherit', customFds: [0, 1, 2] });
@@ -680,15 +688,19 @@ Command.prototype.version = function(str, flags){
  * Windows cannot directly execute scripts as simply as *nix. This maps
  * extensions to executables.
  *
+ * @param {Object} map Extension to executable map.
+ * @param {Object} root Directory containing scripts. (optional)
+ *
  * @example
  *  This will try to execute `pm-build` then `pm-build`.js
  *  Program
  *    .extbang({'.js': 'node'})
  *    .command("build [task]", "Builds a task");
  */
-Command.prototype.extbang = function(map) {
+Command.prototype.extbang = function(map, root) {
   if (!map) return this;
   this._extbang = map;
+  this._extbangRoot = root;
   return this;
 };
 

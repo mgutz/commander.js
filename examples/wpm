@@ -17,4 +17,3 @@ program
 //   node ./examples/wpm help install
 //   node ./examples/wpm install -h
 //   node ./examples/pm install foo bar baz
-//   ./examples/pm install foo bar baz --force
